@@ -13,6 +13,9 @@ app.get('/', async(req, res) => {
 
         const html = `
             <html>
+                <head>
+                    <title>The Not Wendy's Breakfast Menu</title>
+                </head>
                 <body>
                     <h1>The Not Wendy's Breakfast Menu</h1>
                     <table>
@@ -37,34 +40,42 @@ app.get('/', async(req, res) => {
 });
 
 app.get('/:id', async(req, res, next) => {
-    const query = `SELECT food.name
+    try {
+        const query = `SELECT food.name
     FROM food INNER JOIN mealItems ON mealItems.food_id = food.id
     INNER JOIN meal ON mealItems.meal_id = meal.id
     WHERE meal.id = $1;`
     
     const response = await client.query(query, [req.params.id]);
-    const meals = response.rows;
+    const mealItems = response.rows;
 
     const html = `
         <html>
+            <head>
+                <title>The Not Wendy's Breakfast Menu</title>
+            </head>
             <body>
                 <h1>The Not Wendy's Breakfast Menu</h1>
                 <h2>Your Meal Items</h2>
                 <table>
                     <tr>
-                        <th>Meal</th>
-                        
+                        <th>Food</th>
                     </tr>
-                    ${meals.map(meal => {
+                    ${mealItems.map(food => {
                         return `<tr>
-                            <td>${meal.name}</td>
+                            <td>${food.name}</td>
                         </tr>`;
                     }).join('')}
                 </table>
+                <p><a href="/"><-- Return to menu</a></p>
             </body>
         </html>
     `;
     res.send(html);
+    } catch(err) {
+        next(err);
+    }
+    
 });
 
 const startup = async() => {
